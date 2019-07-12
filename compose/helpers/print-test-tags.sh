@@ -12,13 +12,13 @@ helptext="""
 
    Commonly used acceptance tests in the Archivematica suite:
 
-      * black-box
-      * uuids-dirs
-      * mo-aip-reingest
-      * icc
-      * tpc
-      * picc
-      * aip-encrypt-mirror
+      * black-box          :Test Archivematica without Selenium web-driver.
+      * uuids-dirs         :Tests whether UUIDs are assigned to AIP sub-DIRs.
+      * mo-aip-reingest    :Metadata-only reingest.
+      * tpc                :Policy check feature on transfer.
+      * icc                :Policy check feature on ingest.
+      * picc               :Policy check feature for preservation derivatives.
+      * aip-encrypt-mirror :Tests the replication of encrypted AIPs.
 
 """
 
