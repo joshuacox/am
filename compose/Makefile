@@ -155,6 +155,9 @@ test-at-check: test-at-build  ## AMAUAT: test browsers.
 	$(call compose_amauat, \
 		run --rm --no-deps archivematica-acceptance-tests /home/archivematica/acceptance-tests/simplebrowsertest.py)
 
+test-at-list:  ## List commonly used acceptance test tags.
+	@./helpers/print-test-tags.sh
+
 TAGS ?= mo-aip-reingest
 BROWSER ?= Firefox
 test-at-behave: test-at-build  ## AMAUAT: run behave, default is `make test-at-behave TAGS=mo-aip-reingest BROWSER=Firefox`.
@@ -174,6 +177,40 @@ test-at-behave: test-at-build  ## AMAUAT: run behave, default is `make test-at-b
 			-D ss_api_key=test \
 			-D transfer_source_path=archivematica/archivematica-sampledata/TestTransfers/acceptance-tests \
 			-D home=archivematica)
+
+test-at-black-box-docker:  ## Run the black-box automation tests.
+	$(call compose_amauat, \
+		run --rm -e HEADLESS=1 --no-deps archivematica-acceptance-tests /usr/local/bin/behave \
+			--tags=black-box --no-skipped -v --stop \
+			-D driver_name=Chrome \
+			-D ssh_accessible=no \
+			-D am_url=http://nginx/ \
+			-D am_username=test \
+			-D am_password=test \
+			-D am_api_key=test \
+			-D am_version=1.8 \
+			-D ss_url=http://nginx:8000/ \
+			-D ss_username=test \
+			-D ss_password=test \
+			-D ss_api_key=test \
+			-D transfer_source_path=archivematica/archivematica-sampledata/TestTransfers/acceptance-tests \
+			-D home=archivematica)
+
+test-at-black-box-local:  ## Run the black-box automation tests without docker.
+	virtualenv venv && \
+	. venv/bin/activate && \
+	cd "../src/archivematica-acceptance-tests" && \
+	pip install -r requirements.txt && \
+	python3 -m behave --no-skipped -v --stop -D am_url="http://127.0.0.1:62080/" \
+		-D am_username="test" \
+		-D am_api_key="test" \
+		-D ss_url="http://127.0.0.1:62081/" \
+		-D ss_username="test" \
+		-D ss_api_key="test" \
+		--tags=black-box && \
+	cd "../../compose/" && \
+	deactivate && \
+	rm -r "venv"
 
 test-frontend: bootstrap-dashboard-frontend  ## Run Dashboard JS tests.
 	docker-compose run --rm --no-deps --user root --entrypoint npm --workdir /src/dashboard/frontend archivematica-dashboard run "test-single-run"
