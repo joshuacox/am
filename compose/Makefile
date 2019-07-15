@@ -155,8 +155,30 @@ test-at-check: test-at-build  ## AMAUAT: test browsers.
 	$(call compose_amauat, \
 		run --rm --no-deps archivematica-acceptance-tests /home/archivematica/acceptance-tests/simplebrowsertest.py)
 
-test-at-list:  ## List commonly used acceptance test tags.
-	@./helpers/print-test-tags.sh
+define AT_HELP
+
+   Archivematica acceptance tests (Listing).
+
+   The most effective way to run these tests is to run them by tag. For
+   example:
+
+      $ make test-at-behave TAGS=black-box BROWSER=Firefox
+
+   Commonly used acceptance tests in the Archivematica suite:
+
+      * black-box          :Test Archivematica without Selenium web-driver.
+      * uuids-dirs         :Tests whether UUIDs are assigned to AIP sub-DIRs.
+      * mo-aip-reingest    :Metadata-only reingest.
+      * tpc                :Policy check feature on transfer.
+      * icc                :Policy check feature on ingest.
+      * picc               :Policy check feature for preservation derivatives.
+      * aip-encrypt-mirror :Tests the replication of encrypted AIPs.
+
+endef
+
+export AT_HELP
+test-at-help:  ## List commonly used acceptance test tags.
+	@echo "$$AT_HELP"
 
 TAGS ?= mo-aip-reingest
 BROWSER ?= Firefox
@@ -178,39 +200,26 @@ test-at-behave: test-at-build  ## AMAUAT: run behave, default is `make test-at-b
 			-D transfer_source_path=archivematica/archivematica-sampledata/TestTransfers/acceptance-tests \
 			-D home=archivematica)
 
-test-at-black-box-docker:  ## Run the black-box automation tests.
-	$(call compose_amauat, \
-		run --rm -e HEADLESS=1 --no-deps archivematica-acceptance-tests /usr/local/bin/behave \
-			--tags=black-box --no-skipped -v --stop \
-			-D driver_name=Chrome \
-			-D ssh_accessible=no \
-			-D am_url=http://nginx/ \
-			-D am_username=test \
-			-D am_password=test \
-			-D am_api_key=test \
-			-D am_version=1.8 \
-			-D ss_url=http://nginx:8000/ \
-			-D ss_username=test \
-			-D ss_password=test \
-			-D ss_api_key=test \
-			-D transfer_source_path=archivematica/archivematica-sampledata/TestTransfers/acceptance-tests \
-			-D home=archivematica)
+test-at-black-box: TAGS=black-box  ## Run the black-box automation tests.
+test-at-black-box: test-at-behave
 
-test-at-black-box-local:  ## Run the black-box automation tests without docker.
+PY ?= python3
+test-black-box-local:  ## Run the black-box tests without docker. [Options] Python argument as interpreter, e.g `test-black-box-local PY=python2`, default py3
 	virtualenv venv && \
 	. venv/bin/activate && \
 	cd "../src/archivematica-acceptance-tests" && \
-	pip install -r requirements.txt && \
-	python3 -m behave --no-skipped -v --stop -D am_url="http://127.0.0.1:62080/" \
-		-D am_username="test" \
-		-D am_api_key="test" \
-		-D ss_url="http://127.0.0.1:62081/" \
-		-D ss_username="test" \
-		-D ss_api_key="test" \
-		--tags=black-box && \
+	$(PY) -m pip install -r requirements.txt && \
+	$(PY) -m behave --no-skipped -v --stop -D am_url="http://127.0.0.1:62080/" \
+	       -D am_username="test" \
+	       -D am_api_key="test" \
+	       -D ss_url="http://127.0.0.1:62081/" \
+	       -D ss_username="test" \
+	       -D ss_api_key="test" \
+	       --tags=black-box && \
 	cd "../../compose/" && \
 	deactivate && \
 	rm -r "venv"
+
 
 test-frontend: bootstrap-dashboard-frontend  ## Run Dashboard JS tests.
 	docker-compose run --rm --no-deps --user root --entrypoint npm --workdir /src/dashboard/frontend archivematica-dashboard run "test-single-run"
