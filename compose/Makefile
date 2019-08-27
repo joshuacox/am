@@ -50,6 +50,13 @@ bootstrap-storage-service:  ## Boostrap Storage Service (new database).
 	# See #303 (https://git.io/vNKlM) for more details.
 	docker-compose restart archivematica-storage-service
 
+build:
+	git submodule update --init --recursive
+	make create-volumes
+	docker-compose up -d --build
+	make bootstrap
+	make restart-am-services
+
 makemigrations-ss:
 	docker-compose run \
 		--rm \
